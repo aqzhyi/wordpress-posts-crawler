@@ -1,0 +1,12 @@
+{
+  "rules": {
+    "comma-dangle": 0,
+    "no-use-before-define": [2, "nofunc"],
+    "quotes": [2, "single"],
+    "curly": [2, "multi-line"]
+  },
+  "env": {
+    "node": true,
+    "es6": true
+  }
+}
