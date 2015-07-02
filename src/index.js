@@ -1,103 +1,102 @@
-'use strict';
+'use strict'
 
-let debug = process.env.NODE_ENV || 'development';
-let isDev = debug.match('dev') ? true : false;
+const DEBUG = process.env.NODE_ENV || 'development'
+const IS_DEV = DEBUG.match('dev') ? true : false
 
-// isDev = true;
-// isDev = false;
+import debug from 'debug'
+import request from 'request-promise'
+import $ from 'cheerio'
+import _ from 'lodash'
+import async from 'async'
+import colors from 'colors'
+import fs from 'fs-promise'
+import mkdirp from 'mkdirp'
+import del from 'del'
+import thenify from 'thenify'
 
-let logFetcher = require('debug')('wordpress.fetcher');
-let request = require('request-promise');
-let $ = require('cheerio');
-let _ = require('lodash');
-let async = require('async');
-let colors = require('colors');
-let fs = require('fs-promise');
-let mkdirp = require('mkdirp');
-let del = require('del');
-let thenify = require('thenify');
+let logFetcher = debug('wordpress.fetcher')
+let wordpress = require('./target')
 
-del = thenify(del);
+let cleaner = thenify(del)
 
-let wordpress = require('./target');
+cleaner('dist').then(startFetching)
 
-del('dist').then(startFetching);
-
+//
 function startFetching() {
 
   async.eachSeries(wordpress,
     function(target, wordpressDone) {
 
-      let firstTouch = request.get(target.url);
+      let firstTouch = request.get(target.url)
 
       firstTouch
       .then(findPageAmount)
 
       .then(function(maxPageNum) {
-        if (isDev) {
-          logFetcher('Detected development! At most 3 times!');
-          maxPageNum = 3;
+        if (IS_DEV) {
+          logFetcher('Detected development! At most 3 times!')
+          maxPageNum = 3
         }
-        return getAllPages(target.url, 1, maxPageNum);
+        return getAllPages(target.url, 1, maxPageNum)
       })
 
       .then(function(datas) {
         datas = datas.map(function(val) {
-          return findArticleList(val);
-        });
-        return datas;
+          return findArticleList(val)
+        })
+        return datas
       })
 
       .then(function(datas) {
         // concat [[...], [...], [...], ...] to [.........]
         datas = datas.reduce(function(cur, next) {
-          return cur.concat(next);
-        });
-        return datas;
+          return cur.concat(next)
+        })
+        return datas
       })
 
       .then(function(articlesJson) {
         // write file
         return new Promise(function(ok, bad) {
-          let path = `./dist/data/gwan.tw-${target.name}.json`;
-          let dirname = require('path').dirname(path);
+          let path = `./dist/data/gwan.tw-${target.name}.json`
+          let dirname = require('path').dirname(path)
 
           mkdirp(dirname, function(err) {
-            if (err) return bad(err);
+            if (err) return bad(err)
 
-            let data = JSON.stringify(articlesJson);
+            let data = JSON.stringify(articlesJson)
 
             fs.writeFile(path, data, {encoding: 'utf8'})
               .then(function() {
-                ok(articlesJson);
+                ok(articlesJson)
               })
-              .catch(bad);
-          });
-        });
+              .catch(bad)
+          })
+        })
       })
 
       .then(function(result) {
         logFetcher(
           colors.underline.green.bold(`Well done! Now collected ${result.length} items at ./dist/data/`)
-        );
-        return null;
+        )
+        return null
       })
 
       .then(wordpressDone)
-      .catch(wordpressDone);
+      .catch(wordpressDone)
     }
-  , onFetchingError);
+  , onFetchingError)
 
   function onFetchingError(err) {
     if (err) {
       logFetcher(
         colors.white.bgRed.bold(err)
-      );
+      )
     }
 
     logFetcher(
       colors.green.underline.bold('Cool, no error, anythings is ok! Check ./dist/data/ now! Should be json files in there!')
-    );
+    )
   }
 }
 
@@ -110,47 +109,47 @@ function startFetching() {
  * @return {promise} result 為 {array<string>} htmlString。可經由 $(htmlString) 實作後續程式。
  */
 function getAllPages(url, start, maxPageNum) {
-  start = start || 1;
-  maxPageNum = maxPageNum || 10;
+  start = start || 1
+  maxPageNum = maxPageNum || 10
 
-  let ranges = _.range(start, maxPageNum + 1);
+  let ranges = _.range(start, maxPageNum + 1)
 
   return new Promise(function(ok, bad) {
 
-    let data = [];
+    let data = []
 
-    async.eachSeries(ranges, iterator, onSeriesDone);
+    async.eachSeries(ranges, iterator, onSeriesDone)
 
     function iterator(n, done) {
-      let pageUrl = `${url}/page/${n}`;
+      let pageUrl = `${url}/page/${n}`
 
       logFetcher(
         colors.yellow.underline(`Now fetching ${pageUrl} ...`)
-      );
+      )
 
-      let promise = request.get(`${pageUrl}`);
+      let promise = request.get(`${pageUrl}`)
 
       promise
         .then(function(htmlString) {
-          data.push(htmlString);
+          data.push(htmlString)
           return new Promise(function(timeout) {
-            setTimeout(timeout, 200);
-          });
+            setTimeout(timeout, 200)
+          })
         })
-        .then(done);
+        .then(done)
 
-      promise.catch(done);
+      promise.catch(done)
     }
 
     function onSeriesDone(err) {
       if (err) {
-        bad(err);
+        bad(err)
       }
       else {
-        ok(data);
+        ok(data)
       }
     }
-  });
+  })
 }
 
 /**
@@ -160,30 +159,30 @@ function getAllPages(url, start, maxPageNum) {
  * @return {number}
  */
 function findPageAmount(htmlString) {
-  let $html = $(htmlString);
-  let pageNums = [];
+  let $html = $(htmlString)
+  let pageNums = []
 
   $html.find('.page-numbers').map(function(index, element) {
-    let num = parseInt($(element).html(), 10);
-    pageNums.push(num);
-  });
+    let num = parseInt($(element).html(), 10)
+    pageNums.push(num)
+  })
 
   pageNums = _.reject(pageNums, function(val) {
-    return Number.isNaN(val);
-  });
+    return Number.isNaN(val)
+  })
 
-  let maxPageNum = _.max(pageNums);
+  let maxPageNum = _.max(pageNums)
 
-  return maxPageNum;
+  return maxPageNum
 }
 
 /**
  * 得出文章們的細節資訊
  *
  * @example
- * let data = findArticleList('<!DOCTYPE html> <html lang="zh-hant">...</html>');
+ * let data = findArticleList('<!DOCTYPE html> <html lang="zh-hant">...</html>')
  *
- * console.log(data);
+ * console.log(data)
  *
  * [
  *  {
@@ -198,18 +197,18 @@ function findPageAmount(htmlString) {
  * @return {array<object{title, href, datetime}>}
  */
 function findArticleList(htmlString) {
-  let $html = $(htmlString);
-  let $articles = $html.find('article');
-  let articleList = [];
+  let $html = $(htmlString)
+  let $articles = $html.find('article')
+  let articleList = []
 
   _.each($articles, function(element) {
-    let $element = $(element);
+    let $element = $(element)
     articleList.push({
       title: $element.find('h1 a, h2 a').text(),
       href: $element.find('h1 a, h2 a').attr('href'),
       datetime: $element.find('time').attr('datetime'),
-    });
-  });
+    })
+  })
 
-  return articleList;
+  return articleList
 }

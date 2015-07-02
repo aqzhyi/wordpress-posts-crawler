@@ -1,0 +1,15 @@
+{
+  "ecmaFeatures": {
+    "modules": true,
+    "jsx": false
+  },
+  "rules": {
+  },
+  "env": {
+    "browser": false,
+    "es6": true,
+    "mocha": true,
+    "node": true,
+    "phantomjs": false
+  }
+}

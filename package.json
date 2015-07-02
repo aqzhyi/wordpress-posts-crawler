@@ -1,13 +1,15 @@
 {
-  "name": "wordpress.rss.fetcher",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "wordpress-posts-crawler",
+  "version": "0.1.0",
+  "description": "Wordpress posts crawler",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "gulp babel && gulp dev",
+    "build": "gulp babel",
+    "test": "mocha --check-leaks --compilers js:babel/register"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Pleasurazy <pleasurazy@gmail.com>",
+  "license": "MIT",
   "dependencies": {
     "async": "^1.0.0",
     "cheerio": "^0.19.0",
@@ -20,5 +22,12 @@
     "request-promise": "^0.4.2",
     "thenify": "^3.1.0",
     "xml2js": "^0.4.8"
+  },
+  "devDependencies": {
+    "chai": "^3.0.0",
+    "gulp": "^3.9.0",
+    "gulp-babel": "^5.1.0",
+    "gulp-plumber-notifier": "0.0.2",
+    "mocha": "^2.2.5"
   }
 }

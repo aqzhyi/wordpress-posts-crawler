@@ -1,5 +1,11 @@
 {
+  "ecmaFeatures": {
+    "modules": true,
+    "jsx": false
+  },
   "rules": {
+    "semi": [2, "never"],
+    "semi-spacing": [2, {"before": false, "after": false}],
     "comma-dangle": 0,
     "no-use-before-define": [2, "nofunc"],
     "quotes": [2, "single"],
