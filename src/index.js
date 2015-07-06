@@ -1,7 +1,7 @@
 'use strict'
 
-const DEBUG = process.env.NODE_ENV || 'development'
-const IS_DEV = DEBUG.match('dev') ? true : false
+const ENV = process.env.NODE_ENV || 'development'
+const IS_DEV = ENV.match('dev') ? true : false
 
 import debug from 'debug'
 import request from 'request-promise'
@@ -9,95 +9,49 @@ import $ from 'cheerio'
 import _ from 'lodash'
 import async from 'async'
 import colors from 'colors'
-import fs from 'fs-promise'
-import mkdirp from 'mkdirp'
-import del from 'del'
-import thenify from 'thenify'
 
-let logFetcher = debug('wordpress.fetcher')
-let wordpress = require('./target')
-
-let cleaner = thenify(del)
-
-cleaner('dist').then(startFetching)
+let logFetcher = debug('wordpress-posts-crawler:findArticles')
 
 //
-function startFetching() {
+function findAll(opts = {}) {
+  if (!opts.url) Promise.reject('Need a URL that specified the posts list page.')
 
-  async.eachSeries(wordpress,
-    function(target, wordpressDone) {
+  let firstTouch = request.get(opts.url)
 
-      let firstTouch = request.get(target.url)
+  return firstTouch
+  .then(findPageAmount)
 
-      firstTouch
-      .then(findPageAmount)
-
-      .then(function(maxPageNum) {
-        if (IS_DEV) {
-          logFetcher('Detected development! At most 3 times!')
-          maxPageNum = 3
-        }
-        return getAllPages(target.url, 1, maxPageNum)
-      })
-
-      .then(function(datas) {
-        datas = datas.map(function(val) {
-          return findArticleList(val)
-        })
-        return datas
-      })
-
-      .then(function(datas) {
-        // concat [[...], [...], [...], ...] to [.........]
-        datas = datas.reduce(function(cur, next) {
-          return cur.concat(next)
-        })
-        return datas
-      })
-
-      .then(function(articlesJson) {
-        // write file
-        return new Promise(function(ok, bad) {
-          let path = `./dist/data/gwan.tw-${target.name}.json`
-          let dirname = require('path').dirname(path)
-
-          mkdirp(dirname, function(err) {
-            if (err) return bad(err)
-
-            let data = JSON.stringify(articlesJson)
-
-            fs.writeFile(path, data, {encoding: 'utf8'})
-              .then(function() {
-                ok(articlesJson)
-              })
-              .catch(bad)
-          })
-        })
-      })
-
-      .then(function(result) {
-        logFetcher(
-          colors.underline.green.bold(`Well done! Now collected ${result.length} items at ./dist/data/`)
-        )
-        return null
-      })
-
-      .then(wordpressDone)
-      .catch(wordpressDone)
-    }
-  , onFetchingError)
-
-  function onFetchingError(err) {
-    if (err) {
-      logFetcher(
-        colors.white.bgRed.bold(err)
-      )
+  .then(function(maxPageNum) {
+    if (IS_DEV) {
+      logFetcher('hey! 開發環境! 最多三頁!')
+      maxPageNum = 3
     }
 
-    logFetcher(
-      colors.green.underline.bold('Cool, no error, anythings is ok! Check ./dist/data/ now! Should be json files in there!')
-    )
-  }
+    logFetcher(`確認爬取頁數: ${maxPageNum}`)
+    return getAllPages(opts.url, 1, maxPageNum)
+  })
+
+  .then(function(datas) {
+    datas = datas.map(function(val, index) {
+      logFetcher(`找出第 ${index + 1} 頁文章清單`)
+      return findArticleList(val)
+    })
+    return datas
+  })
+
+  .then(function(datas) {
+    // concat [[...], [...], [...], ...] to [.........]
+    datas = datas.reduce(function(cur, next) {
+      return cur.concat(next)
+    })
+    return datas
+  })
+
+  .then(function(articlesJson) {
+    logFetcher(`全部總共有 ${articlesJson.length} 筆文章, done!`)
+
+    return articlesJson
+  })
 }
 
 /**
@@ -124,7 +78,7 @@ function getAllPages(url, start, maxPageNum) {
       let pageUrl = `${url}/page/${n}`
 
       logFetcher(
-        colors.yellow.underline(`Now fetching ${pageUrl} ...`)
+        colors.yellow.underline(`抓取URL: ${pageUrl}`)
       )
 
       let promise = request.get(`${pageUrl}`)
@@ -205,10 +159,14 @@ function findArticleList(htmlString) {
     let $element = $(element)
     articleList.push({
       title: $element.find('h1 a, h2 a').text(),
-      href: $element.find('h1 a, h2 a').attr('href'),
+      url: $element.find('h1 a, h2 a').attr('href'),
       datetime: $element.find('time').attr('datetime'),
     })
   })
 
   return articleList
+}
+
+export default {
+  findAll
 }
