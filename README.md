@@ -1,13 +1,36 @@
-# preview
+# Preview
 
-![](http://i.imgur.com/mrPl6Zf.jpg)
+![](preview.png)
+
+# Usage
+
+```js
+import wordpress from 'wordpress-posts-crawler'
+
+wordpress
+  .findAll({ url: 'http://path/to/wordpress/category/list/' })
+  .then((result) => {
+    // expect array
+    console.log(result)
+
+    // expect object include keys title, url, datetime
+    console.log(result[0])
+  })
+```
 
 # Development
 
-```shell
-$ DEBUG=wordpress.fetcher node app.js
+```sh
+npm run dev
 ```
 
-## debug scope ![https://www.npmjs.com/package/debug](https://img.shields.io/badge/npm-debug-cb3837.svg)
+# test
 
-`wordpress.fetcher`
+```sh
+DEBUG=wordpress-posts-crawler:* npm t
+```
+
+## DEBUG scopes ![https://www.npmjs.com/package/debug](https://img.shields.io/badge/npm-debug-cb3837.svg)
+
+- `wordpress-posts-crawler:*`
+- `wordpress-posts-crawler:findArticles`
