@@ -2,7 +2,13 @@
 
 ![](preview.png)
 
-# Usage
+## Install
+
+```sh
+npm install wordpress-posts-crawler --save-dev
+```
+
+## Usage
 
 ```js
 import wordpress from 'wordpress-posts-crawler'
@@ -18,13 +24,20 @@ wordpress
   })
 ```
 
-# Development
+## Development
 
 ```sh
 npm run dev
 ```
 
-# test
+## ENV
+
+```sh
+NODE_ENV=development # default
+NODE_ENV=production
+```
+
+## test
 
 ```sh
 DEBUG=wordpress-posts-crawler:* npm t
