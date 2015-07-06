@@ -1,7 +1,18 @@
 {
   "name": "wordpress-posts-crawler",
   "version": "0.1.0",
-  "description": "Wordpress posts crawler",
+  "description": "Wordpress posts crawler for node.js",
+  "keywords": [
+    "wordpress",
+    "crawler",
+    "article",
+    "post",
+    "node"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Pleasurazy/wordpress-posts-crawler.git"
+  },
   "main": "dist/index.js",
   "scripts": {
     "dev": "gulp babel && gulp dev",
