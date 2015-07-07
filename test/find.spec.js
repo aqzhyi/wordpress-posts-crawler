@@ -2,7 +2,7 @@ import {expect} from 'chai'
 import $ from 'cheerio'
 import crawler from '../dist/index'
 
-describe.only('find()', () => {
+describe('find()', () => {
 
   it('Basic usage', function() {
     this.timeout(10000)
