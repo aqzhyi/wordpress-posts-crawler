@@ -21,8 +21,21 @@ wordpress
     // expect array
     console.log(result)
 
-    // expect object include keys title, url, datetime
+    // expect object include keys title, url, datetime:string<ISO8601>
     console.log(result[0])
+  })
+```
+
+> find({ url:string })
+
+```js
+import wordpress from 'wordpress-posts-crawler'
+
+wordpress
+  .find({ url: 'http://path/to/wordpress/post/id' })
+  .then((result) => {
+    // expect object include keys title, url, datetime:string<ISO8601>, address:array<string>, cover:string<URL>
+    console.log(result)
   })
 ```
 
