@@ -9,8 +9,11 @@ import $ from 'cheerio'
 import _ from 'lodash'
 import async from 'async'
 import colors from 'colors'
+import he from 'he'
+import addressDigger from 'html-taiwan-address-digger'
 
 let logFetcher = debug('wordpress-posts-crawler:findArticles')
+let logFind = debug('wordpress-posts-crawler:find')
 
 //
 function findAll(opts = {}) {
@@ -51,6 +54,60 @@ function findAll(opts = {}) {
     logFetcher(`全部總共有 ${articlesJson.length} 筆文章, done!`)
 
     return articlesJson
+  })
+}
+
+function find(opts = {}) {
+  if (!opts.url) return Promise.reject('Need a URL that specified the post page.')
+
+  logFind(`來抓取 opts.url`)
+
+  return request({
+    method: 'GET',
+    url: opts.url,
+    json: false,
+  })
+  .then((result) => {
+    let $body = $(result)
+
+    logFind('分析 body')
+    let body = ''
+    body = $body.find('article').find('style,script,textarea').remove().end().html()
+    body = he.decode(body)
+    body = body.replace(/[\n\r\t]/mg, '')
+
+    logFind('分析 title')
+    let title = ''
+    title = $body.find('h1').text()
+    title = title.replace(/[\n\r\t]/mg, '')
+
+    logFind('分析 datetime')
+    let datetime = ''
+    datetime = $body.find('time').attr('datetime')
+    datetime = new Date(datetime)
+    datetime = (datetime.toString().match(/invalid/i)) ? null : datetime
+    datetime = (datetime) ? datetime.toISOString() : null
+
+    logFind('分析 cover')
+    let cover = ''
+    cover = $('meta[property="og:image"]')
+    cover = (cover.length) ? cover.attr('content') : $body.find('article img').eq(0).attr('src')
+
+    logFind('分析 address')
+    let digQ = addressDigger.dig(body)
+
+    return Promise
+    .all([digQ])
+    .then((addresses) => {
+      return {
+        body,
+        cover,
+        datetime,
+        title,
+        url: opts.url,
+        address: addresses
+      }
+    })
   })
 }
 
@@ -168,5 +225,6 @@ function findArticleList(htmlString) {
 }
 
 export default {
-  findAll
+  findAll,
+  find,
 }
