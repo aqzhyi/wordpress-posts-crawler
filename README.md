@@ -10,6 +10,8 @@ npm install wordpress-posts-crawler --save-dev
 
 ## Usage
 
+> findAll({ url:string })
+
 ```js
 import wordpress from 'wordpress-posts-crawler'
 
@@ -46,4 +48,5 @@ DEBUG=wordpress-posts-crawler:* npm t
 ## DEBUG scopes ![https://www.npmjs.com/package/debug](https://img.shields.io/badge/npm-debug-cb3837.svg)
 
 - `wordpress-posts-crawler:*`
-- `wordpress-posts-crawler:findArticles`
+- `wordpress-posts-crawler:find`
+- `wordpress-posts-crawler:findAll`

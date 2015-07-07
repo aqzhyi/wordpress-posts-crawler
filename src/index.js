@@ -12,7 +12,7 @@ import colors from 'colors'
 import he from 'he'
 import addressDigger from 'html-taiwan-address-digger'
 
-let logFetcher = debug('wordpress-posts-crawler:findArticles')
+let logFindAll = debug('wordpress-posts-crawler:findAll')
 let logFind = debug('wordpress-posts-crawler:find')
 
 //
@@ -26,17 +26,17 @@ function findAll(opts = {}) {
 
   .then(function(maxPageNum) {
     if (IS_DEV) {
-      logFetcher('hey! 開發環境! 最多三頁!')
+      logFindAll('hey! 開發環境! 最多三頁!')
       maxPageNum = 3
     }
 
-    logFetcher(`確認爬取頁數: ${maxPageNum}`)
+    logFindAll(`確認爬取頁數: ${maxPageNum}`)
     return getAllPages(opts.url, 1, maxPageNum)
   })
 
   .then(function(datas) {
     datas = datas.map(function(val, index) {
-      logFetcher(`找出第 ${index + 1} 頁文章清單`)
+      logFindAll(`找出第 ${index + 1} 頁文章清單`)
       return findArticleList(val)
     })
     return datas
@@ -51,7 +51,7 @@ function findAll(opts = {}) {
   })
 
   .then(function(articlesJson) {
-    logFetcher(`全部總共有 ${articlesJson.length} 筆文章, done!`)
+    logFindAll(`全部總共有 ${articlesJson.length} 筆文章, done!`)
 
     return articlesJson
   })
@@ -134,7 +134,7 @@ function getAllPages(url, start, maxPageNum) {
     function iterator(n, done) {
       let pageUrl = `${url}/page/${n}`
 
-      logFetcher(
+      logFindAll(
         colors.yellow.underline(`抓取URL: ${pageUrl}`)
       )
 
