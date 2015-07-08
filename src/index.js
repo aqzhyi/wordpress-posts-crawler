@@ -17,6 +17,8 @@ let logFind = debug('wordpress-posts-crawler:find')
 
 //
 function findAll(opts = {}) {
+  const MAX_PAGE = opts.maxPage || 5
+
   if (!opts.url) Promise.reject('Need a URL that specified the posts list page.')
 
   let firstTouch = request.get(opts.url)
@@ -29,6 +31,8 @@ function findAll(opts = {}) {
       logFindAll('hey! 開發環境! 最多三頁!')
       maxPageNum = 3
     }
+
+    maxPageNum = (maxPageNum - MAX_PAGE >= 1) ? MAX_PAGE : maxPageNum
 
     logFindAll(`確認爬取頁數: ${maxPageNum}`)
     return getAllPages(opts.url, 1, maxPageNum)

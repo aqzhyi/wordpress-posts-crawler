@@ -4,10 +4,10 @@ import crawler from '../dist/index'
 
 describe('findAll()', () => {
 
-  it('Basic usage', function(done) {
+  it('Basic usage', function() {
     this.timeout(10000)
 
-    crawler.findAll({ url: 'http://yukiblog.tw/category/yuki-taiwan-food' })
+    return crawler.findAll({ url: 'http://yukiblog.tw/category/yuki-taiwan-food' })
     .then((result) => {
 
       expect(result).to.be.an('array')
@@ -16,6 +16,20 @@ describe('findAll()', () => {
         expect(item).to.include.keys('url', 'title', 'datetime')
       })
     })
-    .then(done, done)
+  })
+
+  it('Only N page we crawl', function() {
+    this.timeout(10000)
+
+    let opts = {
+      maxPage: 1,
+      url: 'http://yukiblog.tw/category/yuki-taiwan-food',
+    }
+
+    return crawler.findAll(opts)
+    .then((result) => {
+      expect(result).to.be.an('array')
+      expect(result).to.not.have.length.above(10)
+    })
   })
 })
