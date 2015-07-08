@@ -10,7 +10,7 @@ npm install wordpress-posts-crawler --save-dev
 
 ## Usage
 
-> findAll({ url:string })
+> findAll({ url: String })
 
 ```js
 import wordpress from 'wordpress-posts-crawler'
@@ -21,12 +21,16 @@ wordpress
     // expect array
     console.log(result)
 
-    // expect object include keys title, url, datetime:string<ISO8601>
     console.log(result[0])
+    // {
+    //  title: String
+    //  url: String<Url>
+    //  datetime: String<ISO8601>
+    // }
   })
 ```
 
-> find({ url:string })
+> find({ url: String })
 
 ```js
 import wordpress from 'wordpress-posts-crawler'
@@ -34,8 +38,17 @@ import wordpress from 'wordpress-posts-crawler'
 wordpress
   .find({ url: 'http://path/to/wordpress/post/id' })
   .then((result) => {
-    // expect object include keys title, url, datetime:string<ISO8601>, address:array<string>, cover:string<URL>
+
     console.log(result)
+    // {
+    //  address: Array<String>
+    //  body: String<HTMLString>
+    //  cover: String<Url>
+    //  datetime: String<ISO8601>
+    //  images: Array<String<Url>>
+    //  title: String
+    //  url: String<Url>
+    // }
   })
 ```
 
