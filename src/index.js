@@ -11,6 +11,7 @@ import async from 'async'
 import colors from 'colors'
 import he from 'he'
 import addressDigger from 'html-taiwan-address-digger'
+import imgDigger from 'html-img-digger'
 
 let logFindAll = debug('wordpress-posts-crawler:findAll')
 let logFind = debug('wordpress-posts-crawler:find')
@@ -100,16 +101,23 @@ function find(opts = {}) {
     logFind('分析 address')
     let digQ = addressDigger.dig(body)
 
+    logFind('分析 images')
+    let imgQ = imgDigger.dig(body)
+
     return Promise
-    .all([digQ])
-    .then((addresses) => {
+    .all([digQ, imgQ])
+    .then(([address, images]) => {
+
+      images = images.map((img) => img.url)
+
       return {
+        address,
         body,
         cover,
         datetime,
+        images,
         title,
         url: opts.url,
-        address: addresses
       }
     })
   })
