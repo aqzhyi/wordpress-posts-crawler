@@ -1,6 +1,6 @@
 # Preview
 
-![](preview.png)
+![hello](preview.jpg)
 
 ## Install
 
