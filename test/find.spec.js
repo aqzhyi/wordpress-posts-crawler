@@ -1,40 +1,40 @@
+import _ from 'lodash'
 import {expect} from 'chai'
 import $ from 'cheerio'
-import _ from 'lodash'
-import crawler from '../dist/index'
+import crawler from '../src/index'
+import isISOString from 'isostring'
+import isUrl from 'is-url'
 
-describe('find()', () => {
+describe('find()', function () {
 
-  it('Basic usage', function() {
-    this.timeout(10000)
+  this.timeout(10000)
 
-    return crawler
-    .find({ url: 'http://yukiblog.tw/read-3802.html' })
-    .then((result) => {
+  it('Basic usage', async () => {
 
-      let $body = $('<div>').append(result.body)
+    let article = await crawler.find({ url: 'http://yukiblog.tw/read-3802.html' })
 
-      expect(result).to.be.an('object')
+    let $body = $('<div>').append(article.body)
 
-      expect(result).to.include.keys('url', 'title', 'datetime', 'address', 'cover', 'body', 'images')
+    expect(article).to.be.an('object')
 
-      expect($body.find('style, script')).to.not.have.length.above(0, '不該有script,style,etc.')
+    expect(article).to.include.keys('url', 'title', 'published', 'address', 'cover', 'body', 'images')
 
-      expect(result.body).to.be.a('string')
+    expect($body.find('style, script')).to.not.have.length.above(0, '不該有script,style,etc.')
 
-      expect(result.title).to.be.a('string')
+    expect(article.body).to.be.a('string')
 
-      expect(result.url).to.be.a('string').to.match(/https?:\/\//)
+    expect(article.title).to.be.a('string')
 
-      expect(result.cover).to.be.a('string').to.match(/https?:\/\//)
+    expect(isUrl(article.url)).to.equal(true, 'article.url 必須是 URL')
 
-      expect(new Date(result.datetime).toString()).to.not.match(/invalid/i, '日期ISO8601')
+    expect(isUrl(article.cover)).to.equal(true, 'article.cover 必須是 URL')
 
-      expect(result.address).to.be.an('array')
-      _.each(result.address, (item) => expect(item).to.be.a('string', '地址'))
+    expect(isISOString(article.published)).to.equal(true, 'article.published 必須為 ISO8601')
 
-      expect(result.images).to.be.an('array')
-      _.each(result.images, (item) => expect(item).to.be.a('string', '圖片URL').to.match(/https?:\/\//, '圖片URL'))
-    })
+    expect(article.address).to.be.an('array')
+    _.each(article.address, (item) => expect(item).to.be.a('string', 'article.address 必須是 string[]'))
+
+    expect(article.images).to.be.an('array')
+    _.each(article.images, (item) => expect(isUrl(item)).to.equal(true, 'article.images 必須是 string[]'))
   })
 })
