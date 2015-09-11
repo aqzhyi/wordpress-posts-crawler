@@ -1,4 +1,5 @@
 {
+  "parser": "babel-eslint",
   "ecmaFeatures": {
     "modules": true,
     "jsx": false
@@ -9,7 +10,8 @@
     "comma-dangle": 0,
     "no-use-before-define": [2, "nofunc"],
     "quotes": [2, "single"],
-    "curly": [2, "multi-line"]
+    "curly": [2, "multi-line"],
+    "no-undef": 2
   },
   "env": {
     "node": true,
