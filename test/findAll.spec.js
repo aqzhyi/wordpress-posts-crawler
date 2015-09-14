@@ -16,6 +16,7 @@ describe('findAll()', function() {
     })
 
     expect(articles).to.be.an('array')
+    expect(articles).to.have.length.below(11)
     _.each(articles, (item) => expect(item).to.include.keys('url', 'title', 'published'))
   })
 
@@ -34,9 +35,11 @@ describe('findAll()', function() {
   it('Basic properties', async () => {
 
     let articles = await crawler.findAll({
-      url: 'http://money9992.pixnet.net/blog',
+      url: 'http://yukiblog.tw/category/yuki-taiwan-food',
       fetchAll: false,
     })
+
+    expect(articles).to.have.length.above(0)
 
     _.each(articles, (item) => {
 
