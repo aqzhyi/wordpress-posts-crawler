@@ -1,35 +1,52 @@
-import {expect} from 'chai'
 import _ from 'lodash'
-import crawler from '../dist/index'
+import {expect} from 'chai'
+import crawler from '../src/index'
+import isISOString from 'isostring'
+import isUrl from 'is-url'
 
-describe('findAll()', () => {
+describe('findAll()', function() {
 
-  it('Basic usage', function() {
-    this.timeout(10000)
+  this.timeout(10000)
 
-    return crawler.findAll({ url: 'http://yukiblog.tw/category/yuki-taiwan-food' })
-    .then((result) => {
+  it('fetchAll: false', async () => {
 
-      expect(result).to.be.an('array')
-
-      _.each(result, (item) => {
-        expect(item).to.include.keys('url', 'title', 'datetime')
-      })
+    let articles = await crawler.findAll({
+      url: 'http://yukiblog.tw/category/yuki-taiwan-food',
+      fetchAll: false,
     })
+
+    expect(articles).to.be.an('array')
+    expect(articles).to.have.length.below(11)
+    _.each(articles, (item) => expect(item).to.include.keys('url', 'title', 'published'))
   })
 
-  it('Only N page we crawl', function() {
-    this.timeout(10000)
+  it('fetchAll: true', async () => {
 
-    let opts = {
-      maxPage: 1,
+    let articles = await crawler.findAll({
       url: 'http://yukiblog.tw/category/yuki-taiwan-food',
-    }
+      fetchAll: true,
+    })
 
-    return crawler.findAll(opts)
-    .then((result) => {
-      expect(result).to.be.an('array')
-      expect(result).to.not.have.length.above(10)
+    expect(articles).to.be.an('array')
+    expect(articles).to.have.length.above(20)
+    _.forEach(articles, (item) => expect(item).to.be.an('object'))
+  })
+
+  it('Basic properties', async () => {
+
+    let articles = await crawler.findAll({
+      url: 'http://yukiblog.tw/category/yuki-taiwan-food',
+      fetchAll: false,
+    })
+
+    expect(articles).to.have.length.above(0)
+
+    _.each(articles, (item) => {
+
+      expect(item).to.include.keys('url', 'title', 'published')
+      expect(isISOString(item.published)).to.equal(true, '必須要有 published')
+      expect(isUrl(item.url)).to.equal(true, '必須要有 url')
+      expect(item.title).to.be.a('string', '必須要有 title')
     })
   })
 })

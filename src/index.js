@@ -1,7 +1,6 @@
 'use strict'
 
-const ENV = process.env.NODE_ENV || 'development'
-const IS_DEV = ENV.match('dev') ? true : false
+const ENV = process.env.NODE_ENV || process.env.ENV || 'development'
 
 import debug from 'debug'
 import request from 'request-promise'
@@ -12,115 +11,113 @@ import colors from 'colors'
 import he from 'he'
 import addressDigger from 'html-taiwan-address-digger'
 import imgDigger from 'html-img-digger'
+import isISOString from 'isostring'
 
-let logFindAll = debug('wordpress-posts-crawler:findAll')
+let logRoot = debug(`wordpress-posts-crawler`)
 let logFind = debug('wordpress-posts-crawler:find')
 
-//
-function findAll(opts = {}) {
-  const MAX_PAGE = opts.maxPage || 5
+/**
+@param {object} opts - options
+@param {string} opts.url - Url of blog (wordpress) that you want to crawl the lists.
+@returns {ArticleShallow}
+*/
+async function findAll(opts = {}) {
 
-  if (!opts.url) Promise.reject('Need a URL that specified the posts list page.')
+  const FETCH_ALL = (opts.fetchAll === true) ? true : false
+  const URL = (_.isString(opts.url)) ? opts.url : null
 
-  let firstTouch = request.get(opts.url)
+  let log = debug(`${logRoot.namespace}:findAll`)
 
-  return firstTouch
-  .then(findPageAmount)
+  if (!URL) Promise.reject('Expect findAll({url :string}), but connot find url.')
+  log(`findAll from URL ${URL}`)
 
-  .then(function(maxPageNum) {
-    if (IS_DEV) {
-      logFindAll('hey! 開發環境! 最多三頁!')
+  let maxPageNum = 1
+
+  if (FETCH_ALL === true) {
+    maxPageNum = findPageAmount(await request.get(URL))
+
+    log(`fetchAll: ${FETCH_ALL}, therefore, we take the articles from all pages of list, there are amount to ${maxPageNum} pages.`)
+
+    if (ENV.match(/test/i)) {
+      log(`ENV: ${ENV}, therefore, pages at most 3, no more.`)
       maxPageNum = 3
     }
+  }
+  else {
+    log(`fetchAll: ${FETCH_ALL}, we take the articles from only list of page 1.`)
+    maxPageNum = 1
+  }
 
-    maxPageNum = (maxPageNum - MAX_PAGE >= 1) ? MAX_PAGE : maxPageNum
+  let HTMLStringOfLists = await getAllPages(URL, 1, maxPageNum)
+  let list = []
 
-    logFindAll(`確認爬取頁數: ${maxPageNum}`)
-    return getAllPages(opts.url, 1, maxPageNum)
-  })
+  for (let HTMLString of HTMLStringOfLists) {
+    let items = await findArticleList(HTMLString)
+    list = list.concat(items)
+  }
 
-  .then(function(datas) {
-    datas = datas.map(function(val, index) {
-      logFindAll(`找出第 ${index + 1} 頁文章清單`)
-      return findArticleList(val)
-    })
-    return datas
-  })
+  log(`[ok] There is amount to ${list.length} of article.`)
 
-  .then(function(datas) {
-    // concat [[...], [...], [...], ...] to [.........]
-    datas = datas.reduce(function(cur, next) {
-      return cur.concat(next)
-    })
-    return datas
-  })
-
-  .then(function(articlesJson) {
-    logFindAll(`全部總共有 ${articlesJson.length} 筆文章, done!`)
-
-    return articlesJson
-  })
+  return list
 }
 
-function find(opts = {}) {
-  if (!opts.url) return Promise.reject('Need a URL that specified the post page.')
+/**
+@param {object} opts - options
+@param {string} opts.url - Url of article that you want to crawl the detail.
+@returns {Article}
+*/
+async function find(opts = {}) {
 
-  logFind(`來抓取 opts.url`)
+  const URL = (opts.url) ? opts.url : null
+  let log = debug(`${logRoot.namespace}:find`)
 
-  return request({
+  if (!opts.url) return rejection('Expect find({url :string}), but cannot find url.', log)
+
+  log(`HTTP GET ${URL}`)
+
+  let HTMLString = await request({
     method: 'GET',
-    url: opts.url,
+    url: URL,
     json: false,
   })
-  .then((result) => {
-    let $body = $(result)
 
-    logFind('分析 body')
-    let body = ''
-    body = $body.find('article').find('style,script,textarea').remove().end().html()
-    body = he.decode(body)
-    body = body.replace(/[\n\r\t]/mg, '')
+  let $body = $(HTMLString)
 
-    logFind('分析 title')
-    let title = ''
-    title = $body.find('h1').text()
-    title = title.replace(/[\n\r\t]/mg, '')
+  let body = ''
+  body = $body.find('article').find('style,script,textarea').remove().end().html()
+  body = he.decode(body)
+  body = body.replace(/[\n\r\t]/mg, '')
 
-    logFind('分析 datetime')
-    let datetime = ''
-    datetime = $body.find('time').attr('datetime')
-    datetime = new Date(datetime)
-    datetime = (datetime.toString().match(/invalid/i)) ? null : datetime
-    datetime = (datetime) ? datetime.toISOString() : null
+  let title = ''
+  title = $body.find('h1').text()
+  title = title.replace(/[\n\r\t]/mg, '')
 
-    logFind('分析 cover')
-    let cover = ''
-    cover = $('meta[property="og:image"]')
-    cover = (cover.length) ? cover.attr('content') : $body.find('article img').eq(0).attr('src')
+  let published = ''
+  published = $body.find('time').attr('datetime')
+  published = new Date(published).toISOString()
+  published = (isISOString(published)) ? published : null
 
-    logFind('分析 address')
-    let digQ = addressDigger.dig(body)
+  let cover = ''
+  cover = $('meta[property="og:image"]')
+  cover = (cover.length) ? cover.attr('content') : $body.find('article img').eq(0).attr('src')
 
-    logFind('分析 images')
-    let imgQ = imgDigger.dig(body)
+  let digQ = addressDigger.dig(body)
 
-    return Promise
-    .all([digQ, imgQ])
-    .then(([address, images]) => {
+  let imgQ = imgDigger.dig(body)
 
-      images = images.map((img) => img.url)
+  let [address, images] = await Promise.all([digQ, imgQ])
 
-      return {
-        address,
-        body,
-        cover,
-        datetime,
-        images,
-        title,
-        url: opts.url,
-      }
-    })
-  })
+  log(`[ok] You got title: ${title}, images.len: ${images.length}, address.len: ${address.length}...`)
+
+  return {
+    address,
+    body,
+    cover,
+    images: images.map((img) => img.url),
+    published,
+    title,
+    url: URL,
+  }
 }
 
 /**
@@ -135,6 +132,7 @@ function getAllPages(url, start, maxPageNum) {
   start = start || 1
   maxPageNum = maxPageNum || 10
 
+  let log = debug(`${logRoot.namespace}:_getAllPages`)
   let ranges = _.range(start, maxPageNum + 1)
 
   return new Promise(function(ok, bad) {
@@ -146,8 +144,8 @@ function getAllPages(url, start, maxPageNum) {
     function iterator(n, done) {
       let pageUrl = `${url}/page/${n}`
 
-      logFindAll(
-        colors.yellow.underline(`抓取URL: ${pageUrl}`)
+      log(
+        colors.blue.underline(`HTTP GET ${pageUrl}`)
       )
 
       let promise = request.get(`${pageUrl}`)
@@ -211,13 +209,13 @@ function findPageAmount(htmlString) {
  *  {
  *    title: '桃園龜山．無名麵店（乾麵滑Q順口，豬肝綿密軟嫩）',
  *    href: 'http://www.alberthsieh.com/1837/anonymous-noodle-shop-guishan',
- *    datetime: '2015-05-08T18:24:23+00:00',
+ *    published: '2015-05-08T18:24:23+00:00',
  *  },
  *  ...
  * ]
  *
  * @param {string} htmlString 傳入目標的 html 源碼
- * @return {array<object{title, href, datetime}>}
+ * @return {array<object{title, href, published}>}
  */
 function findArticleList(htmlString) {
   let $html = $(htmlString)
@@ -229,12 +227,35 @@ function findArticleList(htmlString) {
     articleList.push({
       title: $element.find('h1 a, h2 a').text(),
       url: $element.find('h1 a, h2 a').attr('href'),
-      datetime: $element.find('time').attr('datetime'),
+      published: $element.find('time').attr('datetime'),
     })
   })
 
   return articleList
 }
+
+function rejection(message = '', log) {
+  if (_.isFunction(log)) log(`[error] ${colors.red.underline(message)}`)
+  return Promise.reject(message)
+}
+
+/**
+@interface ArticleShallow
+@prop {string} url - Url of article
+@prop {string} published - Published of article (format ISO8601)
+@prop {string} title - Title of article
+*/
+
+/**
+@interface Article
+@prop {string} url - Url of article
+@prop {string} published - Published of article (format ISO8601)
+@prop {string} title - Title of article
+@prop {string[]} address - Tawian Address format
+@prop {string} cover - Url
+@prop {string} body - HTML
+@prop {string[]} images - Url
+*/
 
 export default {
   findAll,
