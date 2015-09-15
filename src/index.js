@@ -16,7 +16,11 @@ import isISOString from 'isostring'
 let logRoot = debug(`wordpress-posts-crawler`)
 let logFind = debug('wordpress-posts-crawler:find')
 
-//
+/**
+@param {object} opts - options
+@param {string} opts.url - Url of blog (wordpress) that you want to crawl the lists.
+@returns {ArticleShallow}
+*/
 async function findAll(opts = {}) {
 
   const FETCH_ALL = (opts.fetchAll === true) ? true : false
@@ -57,6 +61,11 @@ async function findAll(opts = {}) {
   return list
 }
 
+/**
+@param {object} opts - options
+@param {string} opts.url - Url of article that you want to crawl the detail.
+@returns {Article}
+*/
 async function find(opts = {}) {
 
   const URL = (opts.url) ? opts.url : null
@@ -229,6 +238,24 @@ function rejection(message = '', log) {
   if (_.isFunction(log)) log(`[error] ${colors.red.underline(message)}`)
   return Promise.reject(message)
 }
+
+/**
+@interface ArticleShallow
+@prop {string} url - Url of article
+@prop {string} published - Published of article (format ISO8601)
+@prop {string} title - Title of article
+*/
+
+/**
+@interface Article
+@prop {string} url - Url of article
+@prop {string} published - Published of article (format ISO8601)
+@prop {string} title - Title of article
+@prop {string[]} address - Tawian Address format
+@prop {string} cover - Url
+@prop {string} body - HTML
+@prop {string[]} images - Url
+*/
 
 export default {
   findAll,
