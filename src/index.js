@@ -1,7 +1,6 @@
 'use strict'
 
 const ENV = process.env.NODE_ENV || process.env.ENV || 'development'
-const IS_DEV = ENV.match('dev') ? true : false
 
 import debug from 'debug'
 import request from 'request-promise'
@@ -58,64 +57,58 @@ async function findAll(opts = {}) {
   return list
 }
 
-function find(opts = {}) {
-  if (!opts.url) return Promise.reject('Need a URL that specified the post page.')
+async function find(opts = {}) {
 
-  logFind(`來抓取 opts.url`)
+  const URL = (opts.url) ? opts.url : null
+  let log = debug(`${logRoot.namespace}:find`)
 
-  return request({
+  if (!opts.url) return rejection('Expect find({url :string}), but cannot find url.', log)
+
+  log(`HTTP GET ${URL}`)
+
+  let HTMLString = await request({
     method: 'GET',
-    url: opts.url,
+    url: URL,
     json: false,
   })
-  .then((result) => {
-    let $body = $(result)
 
-    logFind('分析 body')
-    let body = ''
-    body = $body.find('article').find('style,script,textarea').remove().end().html()
-    body = he.decode(body)
-    body = body.replace(/[\n\r\t]/mg, '')
+  let $body = $(HTMLString)
 
-    logFind('分析 title')
-    let title = ''
-    title = $body.find('h1').text()
-    title = title.replace(/[\n\r\t]/mg, '')
+  let body = ''
+  body = $body.find('article').find('style,script,textarea').remove().end().html()
+  body = he.decode(body)
+  body = body.replace(/[\n\r\t]/mg, '')
 
-    logFind('分析 datetime')
-    let published = ''
-    published = $body.find('time').attr('datetime')
-    published = new Date(published).toISOString()
-    published = (isISOString(published)) ? published : null
+  let title = ''
+  title = $body.find('h1').text()
+  title = title.replace(/[\n\r\t]/mg, '')
 
-    logFind('分析 cover')
-    let cover = ''
-    cover = $('meta[property="og:image"]')
-    cover = (cover.length) ? cover.attr('content') : $body.find('article img').eq(0).attr('src')
+  let published = ''
+  published = $body.find('time').attr('datetime')
+  published = new Date(published).toISOString()
+  published = (isISOString(published)) ? published : null
 
-    logFind('分析 address')
-    let digQ = addressDigger.dig(body)
+  let cover = ''
+  cover = $('meta[property="og:image"]')
+  cover = (cover.length) ? cover.attr('content') : $body.find('article img').eq(0).attr('src')
 
-    logFind('分析 images')
-    let imgQ = imgDigger.dig(body)
+  let digQ = addressDigger.dig(body)
 
-    return Promise
-    .all([digQ, imgQ])
-    .then(([address, images]) => {
+  let imgQ = imgDigger.dig(body)
 
-      images = images.map((img) => img.url)
+  let [address, images] = await Promise.all([digQ, imgQ])
 
-      return {
-        address,
-        body,
-        cover,
-        published,
-        images,
-        title,
-        url: opts.url,
-      }
-    })
-  })
+  log(`[ok] You got title: ${title}, images.len: ${images.length}, address.len: ${address.length}...`)
+
+  return {
+    address,
+    body,
+    cover,
+    images: images.map((img) => img.url),
+    published,
+    title,
+    url: URL,
+  }
 }
 
 /**
@@ -230,6 +223,11 @@ function findArticleList(htmlString) {
   })
 
   return articleList
+}
+
+function rejection(message = '', log) {
+  if (_.isFunction(log)) log(`[error] ${colors.red.underline(message)}`)
+  return Promise.reject(message)
 }
 
 export default {
