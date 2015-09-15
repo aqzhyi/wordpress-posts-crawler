@@ -1,6 +1,6 @@
 {
   "name": "wordpress-posts-crawler",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Wordpress posts crawler for node.js",
   "keywords": [
     "wordpress",
