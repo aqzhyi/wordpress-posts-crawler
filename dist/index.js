@@ -1,16 +1,16 @@
 (function (global, factory) {
   if (typeof define === 'function' && define.amd) {
-    define(['exports', 'module', 'debug', 'request-promise', 'cheerio', 'lodash', 'async', 'colors', 'he', 'html-taiwan-address-digger', 'html-img-digger'], factory);
+    define(['exports', 'module', 'debug', 'request-promise', 'cheerio', 'lodash', 'async', 'colors', 'he', 'html-taiwan-address-digger', 'html-img-digger', 'isostring'], factory);
   } else if (typeof exports !== 'undefined' && typeof module !== 'undefined') {
-    factory(exports, module, require('debug'), require('request-promise'), require('cheerio'), require('lodash'), require('async'), require('colors'), require('he'), require('html-taiwan-address-digger'), require('html-img-digger'));
+    factory(exports, module, require('debug'), require('request-promise'), require('cheerio'), require('lodash'), require('async'), require('colors'), require('he'), require('html-taiwan-address-digger'), require('html-img-digger'), require('isostring'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, mod, global.debug, global.request, global.$, global._, global.async, global.colors, global.he, global.addressDigger, global.imgDigger);
+    factory(mod.exports, mod, global.debug, global.request, global.$, global._, global.async, global.colors, global.he, global.addressDigger, global.imgDigger, global.isISOString);
     global.index = mod.exports;
   }
-})(this, function (exports, module, _debug, _requestPromise, _cheerio, _lodash, _async, _colors, _he, _htmlTaiwanAddressDigger, _htmlImgDigger) {
+})(this, function (exports, module, _debug, _requestPromise, _cheerio, _lodash, _async, _colors, _he, _htmlTaiwanAddressDigger, _htmlImgDigger, _isostring) {
   'use strict';
 
   var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
@@ -35,115 +35,229 @@
 
   var _imgDigger = _interopRequireDefault(_htmlImgDigger);
 
-  var ENV = process.env.NODE_ENV || 'development';
-  var IS_DEV = ENV.match('dev') ? true : false;
+  var _isISOString = _interopRequireDefault(_isostring);
 
-  var logFindAll = (0, _debug2['default'])('wordpress-posts-crawler:findAll');
+  var ENV = process.env.NODE_ENV || process.env.ENV || 'development';
+
+  var logRoot = (0, _debug2['default'])('wordpress-posts-crawler');
   var logFind = (0, _debug2['default'])('wordpress-posts-crawler:find');
 
-  //
+  /**
+  @param {object} opts - options
+  @param {string} opts.url - Url of blog (wordpress) that you want to crawl the lists.
+  @returns {ArticleShallow}
+  */
   function findAll() {
-    var opts = arguments[0] === undefined ? {} : arguments[0];
+    var opts = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
-    var MAX_PAGE = opts.maxPage || 5;
+    var FETCH_ALL, URL, log, maxPageNum, HTMLStringOfLists, list, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, HTMLString, items;
 
-    if (!opts.url) Promise.reject('Need a URL that specified the posts list page.');
+    return regeneratorRuntime.async(function findAll$(context$1$0) {
+      while (1) switch (context$1$0.prev = context$1$0.next) {
+        case 0:
+          FETCH_ALL = opts.fetchAll === true ? true : false;
+          URL = _2['default'].isString(opts.url) ? opts.url : null;
+          log = (0, _debug2['default'])(logRoot.namespace + ':findAll');
 
-    var firstTouch = _request['default'].get(opts.url);
+          if (!URL) Promise.reject('Expect findAll({url :string}), but connot find url.');
+          log('findAll from URL ' + URL);
 
-    return firstTouch.then(findPageAmount).then(function (maxPageNum) {
-      if (IS_DEV) {
-        logFindAll('hey! 開發環境! 最多三頁!');
-        maxPageNum = 3;
+          maxPageNum = 1;
+
+          if (!(FETCH_ALL === true)) {
+            context$1$0.next = 15;
+            break;
+          }
+
+          context$1$0.next = 9;
+          return regeneratorRuntime.awrap(_request['default'].get(URL));
+
+        case 9:
+          context$1$0.t0 = context$1$0.sent;
+          maxPageNum = findPageAmount(context$1$0.t0);
+
+          log('fetchAll: ' + FETCH_ALL + ', therefore, we take the articles from all pages of list, there are amount to ' + maxPageNum + ' pages.');
+
+          if (ENV.match(/test/i)) {
+            log('ENV: ' + ENV + ', therefore, pages at most 3, no more.');
+            maxPageNum = 3;
+          }
+          context$1$0.next = 17;
+          break;
+
+        case 15:
+          log('fetchAll: ' + FETCH_ALL + ', we take the articles from only list of page 1.');
+          maxPageNum = 1;
+
+        case 17:
+          context$1$0.next = 19;
+          return regeneratorRuntime.awrap(getAllPages(URL, 1, maxPageNum));
+
+        case 19:
+          HTMLStringOfLists = context$1$0.sent;
+          list = [];
+          _iteratorNormalCompletion = true;
+          _didIteratorError = false;
+          _iteratorError = undefined;
+          context$1$0.prev = 24;
+          _iterator = HTMLStringOfLists[Symbol.iterator]();
+
+        case 26:
+          if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
+            context$1$0.next = 35;
+            break;
+          }
+
+          HTMLString = _step.value;
+          context$1$0.next = 30;
+          return regeneratorRuntime.awrap(findArticleList(HTMLString));
+
+        case 30:
+          items = context$1$0.sent;
+
+          list = list.concat(items);
+
+        case 32:
+          _iteratorNormalCompletion = true;
+          context$1$0.next = 26;
+          break;
+
+        case 35:
+          context$1$0.next = 41;
+          break;
+
+        case 37:
+          context$1$0.prev = 37;
+          context$1$0.t1 = context$1$0['catch'](24);
+          _didIteratorError = true;
+          _iteratorError = context$1$0.t1;
+
+        case 41:
+          context$1$0.prev = 41;
+          context$1$0.prev = 42;
+
+          if (!_iteratorNormalCompletion && _iterator['return']) {
+            _iterator['return']();
+          }
+
+        case 44:
+          context$1$0.prev = 44;
+
+          if (!_didIteratorError) {
+            context$1$0.next = 47;
+            break;
+          }
+
+          throw _iteratorError;
+
+        case 47:
+          return context$1$0.finish(44);
+
+        case 48:
+          return context$1$0.finish(41);
+
+        case 49:
+
+          log('[ok] There is amount to ' + list.length + ' of article.');
+
+          return context$1$0.abrupt('return', list);
+
+        case 51:
+        case 'end':
+          return context$1$0.stop();
       }
-
-      maxPageNum = maxPageNum - MAX_PAGE >= 1 ? MAX_PAGE : maxPageNum;
-
-      logFindAll('確認爬取頁數: ' + maxPageNum);
-      return getAllPages(opts.url, 1, maxPageNum);
-    }).then(function (datas) {
-      datas = datas.map(function (val, index) {
-        logFindAll('找出第 ' + (index + 1) + ' 頁文章清單');
-        return findArticleList(val);
-      });
-      return datas;
-    }).then(function (datas) {
-      // concat [[...], [...], [...], ...] to [.........]
-      datas = datas.reduce(function (cur, next) {
-        return cur.concat(next);
-      });
-      return datas;
-    }).then(function (articlesJson) {
-      logFindAll('全部總共有 ' + articlesJson.length + ' 筆文章, done!');
-
-      return articlesJson;
-    });
+    }, null, this, [[24, 37, 41, 49], [42,, 44, 48]]);
   }
 
+  /**
+  @param {object} opts - options
+  @param {string} opts.url - Url of article that you want to crawl the detail.
+  @returns {Article}
+  */
   function find() {
-    var opts = arguments[0] === undefined ? {} : arguments[0];
+    var opts = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
-    if (!opts.url) return Promise.reject('Need a URL that specified the post page.');
+    var URL, log, HTMLString, $body, body, title, published, cover, digQ, imgQ, _ref, _ref2, address, images;
 
-    logFind('來抓取 opts.url');
+    return regeneratorRuntime.async(function find$(context$1$0) {
+      while (1) switch (context$1$0.prev = context$1$0.next) {
+        case 0:
+          URL = opts.url ? opts.url : null;
+          log = (0, _debug2['default'])(logRoot.namespace + ':find');
 
-    return (0, _request['default'])({
-      method: 'GET',
-      url: opts.url,
-      json: false
-    }).then(function (result) {
-      var $body = (0, _$['default'])(result);
+          if (opts.url) {
+            context$1$0.next = 4;
+            break;
+          }
 
-      logFind('分析 body');
-      var body = '';
-      body = $body.find('article').find('style,script,textarea').remove().end().html();
-      body = _he2['default'].decode(body);
-      body = body.replace(/[\n\r\t]/mg, '');
+          return context$1$0.abrupt('return', rejection('Expect find({url :string}), but cannot find url.', log));
 
-      logFind('分析 title');
-      var title = '';
-      title = $body.find('h1').text();
-      title = title.replace(/[\n\r\t]/mg, '');
+        case 4:
 
-      logFind('分析 datetime');
-      var datetime = '';
-      datetime = $body.find('time').attr('datetime');
-      datetime = new Date(datetime);
-      datetime = datetime.toString().match(/invalid/i) ? null : datetime;
-      datetime = datetime ? datetime.toISOString() : null;
+          log('HTTP GET ' + URL);
 
-      logFind('分析 cover');
-      var cover = '';
-      cover = (0, _$['default'])('meta[property="og:image"]');
-      cover = cover.length ? cover.attr('content') : $body.find('article img').eq(0).attr('src');
+          context$1$0.next = 7;
+          return regeneratorRuntime.awrap((0, _request['default'])({
+            method: 'GET',
+            url: URL,
+            json: false
+          }));
 
-      logFind('分析 address');
-      var digQ = _addressDigger['default'].dig(body);
+        case 7:
+          HTMLString = context$1$0.sent;
+          $body = (0, _$['default'])(HTMLString);
+          body = '';
 
-      logFind('分析 images');
-      var imgQ = _imgDigger['default'].dig(body);
+          body = $body.find('article').find('style,script,textarea').remove().end().html();
+          body = _he2['default'].decode(body);
+          body = body.replace(/[\n\r\t]/mg, '');
 
-      return Promise.all([digQ, imgQ]).then(function (_ref) {
-        var _ref2 = _slicedToArray(_ref, 2);
+          title = '';
 
-        var address = _ref2[0];
-        var images = _ref2[1];
+          title = $body.find('h1').text();
+          title = title.replace(/[\n\r\t]/mg, '');
 
-        images = images.map(function (img) {
-          return img.url;
-        });
+          published = '';
 
-        return {
-          address: address,
-          body: body,
-          cover: cover,
-          datetime: datetime,
-          images: images,
-          title: title,
-          url: opts.url
-        };
-      });
-    });
+          published = $body.find('time').attr('datetime');
+          published = new Date(published).toISOString();
+          published = (0, _isISOString['default'])(published) ? published : null;
+
+          cover = '';
+
+          cover = (0, _$['default'])('meta[property="og:image"]');
+          cover = cover.length ? cover.attr('content') : $body.find('article img').eq(0).attr('src');
+
+          digQ = _addressDigger['default'].dig(body);
+          imgQ = _imgDigger['default'].dig(body);
+          context$1$0.next = 27;
+          return regeneratorRuntime.awrap(Promise.all([digQ, imgQ]));
+
+        case 27:
+          _ref = context$1$0.sent;
+          _ref2 = _slicedToArray(_ref, 2);
+          address = _ref2[0];
+          images = _ref2[1];
+
+          log('[ok] You got title: ' + title + ', images.len: ' + images.length + ', address.len: ' + address.length + '...');
+
+          return context$1$0.abrupt('return', {
+            address: address,
+            body: body,
+            cover: cover,
+            images: images.map(function (img) {
+              return img.url;
+            }),
+            published: published,
+            title: title,
+            url: URL
+          });
+
+        case 33:
+        case 'end':
+          return context$1$0.stop();
+      }
+    }, null, this);
   }
 
   /**
@@ -158,6 +272,7 @@
     start = start || 1;
     maxPageNum = maxPageNum || 10;
 
+    var log = (0, _debug2['default'])(logRoot.namespace + ':_getAllPages');
     var ranges = _2['default'].range(start, maxPageNum + 1);
 
     return new Promise(function (ok, bad) {
@@ -169,7 +284,7 @@
       function iterator(n, done) {
         var pageUrl = url + '/page/' + n;
 
-        logFindAll(_colors2['default'].yellow.underline('抓取URL: ' + pageUrl));
+        log(_colors2['default'].blue.underline('HTTP GET ' + pageUrl));
 
         var promise = _request['default'].get('' + pageUrl);
 
@@ -229,13 +344,13 @@
    *  {
    *    title: '桃園龜山．無名麵店（乾麵滑Q順口，豬肝綿密軟嫩）',
    *    href: 'http://www.alberthsieh.com/1837/anonymous-noodle-shop-guishan',
-   *    datetime: '2015-05-08T18:24:23+00:00',
+   *    published: '2015-05-08T18:24:23+00:00',
    *  },
    *  ...
    * ]
    *
    * @param {string} htmlString 傳入目標的 html 源碼
-   * @return {array<object{title, href, datetime}>}
+   * @return {array<object{title, href, published}>}
    */
   function findArticleList(htmlString) {
     var $html = (0, _$['default'])(htmlString);
@@ -247,12 +362,37 @@
       articleList.push({
         title: $element.find('h1 a, h2 a').text(),
         url: $element.find('h1 a, h2 a').attr('href'),
-        datetime: $element.find('time').attr('datetime')
+        published: $element.find('time').attr('datetime')
       });
     });
 
     return articleList;
   }
+
+  function rejection(message, log) {
+    if (message === undefined) message = '';
+
+    if (_2['default'].isFunction(log)) log('[error] ' + _colors2['default'].red.underline(message));
+    return Promise.reject(message);
+  }
+
+  /**
+  @interface ArticleShallow
+  @prop {string} url - Url of article
+  @prop {string} published - Published of article (format ISO8601)
+  @prop {string} title - Title of article
+  */
+
+  /**
+  @interface Article
+  @prop {string} url - Url of article
+  @prop {string} published - Published of article (format ISO8601)
+  @prop {string} title - Title of article
+  @prop {string[]} address - Tawian Address format
+  @prop {string} cover - Url
+  @prop {string} body - HTML
+  @prop {string[]} images - Url
+  */
 
   module.exports = {
     findAll: findAll,
