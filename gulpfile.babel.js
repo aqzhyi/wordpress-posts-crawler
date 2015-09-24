@@ -12,6 +12,9 @@ function devTask() {
 function babelTask() {
   return gulp.src('./src/**/*.js')
   .pipe(gulpPlumberNotifier())
-  .pipe(gulpBabel({ modules: 'umd' }))
+  .pipe(gulpBabel({
+    modules: 'umd',
+    optional: ['runtime'],
+  }))
   .pipe(gulp.dest('./dist'))
 }
