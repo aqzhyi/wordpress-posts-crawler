@@ -22,8 +22,9 @@
   "author": "Pleasurazy <pleasurazy@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "async-q": "^0.2.2",
     "async": "^1.0.0",
+    "async-q": "^0.2.2",
+    "babel-runtime": "^5.8.25",
     "cheerio": "^0.19.0",
     "colors": "^1.1.0",
     "debug": "^2.2.0",
