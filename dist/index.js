@@ -1,41 +1,37 @@
 (function (global, factory) {
   if (typeof define === 'function' && define.amd) {
-    define(['exports', 'module', 'debug', 'request-promise', 'cheerio', 'lodash', 'async', 'colors', 'he', 'html-taiwan-address-digger', 'html-img-digger', 'isostring'], factory);
+    define(['exports', 'module', 'babel-runtime/helpers/sliced-to-array', 'babel-runtime/regenerator', 'babel-runtime/core-js/promise', 'babel-runtime/core-js/get-iterator', 'babel-runtime/core-js/number/is-nan', 'debug', 'babel-runtime/helpers/interop-require-default', 'request-promise', 'cheerio', 'lodash', 'async', 'colors', 'he', 'html-taiwan-address-digger', 'html-img-digger', 'isostring'], factory);
   } else if (typeof exports !== 'undefined' && typeof module !== 'undefined') {
-    factory(exports, module, require('debug'), require('request-promise'), require('cheerio'), require('lodash'), require('async'), require('colors'), require('he'), require('html-taiwan-address-digger'), require('html-img-digger'), require('isostring'));
+    factory(exports, module, require('babel-runtime/helpers/sliced-to-array'), require('babel-runtime/regenerator'), require('babel-runtime/core-js/promise'), require('babel-runtime/core-js/get-iterator'), require('babel-runtime/core-js/number/is-nan'), require('debug'), require('babel-runtime/helpers/interop-require-default'), require('request-promise'), require('cheerio'), require('lodash'), require('async'), require('colors'), require('he'), require('html-taiwan-address-digger'), require('html-img-digger'), require('isostring'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, mod, global.debug, global.request, global.$, global._, global.async, global.colors, global.he, global.addressDigger, global.imgDigger, global.isISOString);
+    factory(mod.exports, mod, global._slicedToArray, global._regeneratorRuntime, global._Promise, global._getIterator, global._Number$isNaN, global.debug, global._interopRequireDefault, global.request, global.$, global._, global.async, global.colors, global.he, global.addressDigger, global.imgDigger, global.isISOString);
     global.index = mod.exports;
   }
-})(this, function (exports, module, _debug, _requestPromise, _cheerio, _lodash, _async, _colors, _he, _htmlTaiwanAddressDigger, _htmlImgDigger, _isostring) {
+})(this, function (exports, module, _babelRuntimeHelpersSlicedToArray, _babelRuntimeRegenerator, _babelRuntimeCoreJsPromise, _babelRuntimeCoreJsGetIterator, _babelRuntimeCoreJsNumberIsNan, _debug, _babelRuntimeHelpersInteropRequireDefault, _requestPromise, _cheerio, _lodash, _async, _colors, _he, _htmlTaiwanAddressDigger, _htmlImgDigger, _isostring) {
   'use strict';
 
-  var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
+  var _debug2 = (0, _babelRuntimeHelpersInteropRequireDefault['default'])(_debug);
 
-  function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+  var _request = (0, _babelRuntimeHelpersInteropRequireDefault['default'])(_requestPromise);
 
-  var _debug2 = _interopRequireDefault(_debug);
+  var _$ = (0, _babelRuntimeHelpersInteropRequireDefault['default'])(_cheerio);
 
-  var _request = _interopRequireDefault(_requestPromise);
+  var _2 = (0, _babelRuntimeHelpersInteropRequireDefault['default'])(_lodash);
 
-  var _$ = _interopRequireDefault(_cheerio);
+  var _async2 = (0, _babelRuntimeHelpersInteropRequireDefault['default'])(_async);
 
-  var _2 = _interopRequireDefault(_lodash);
+  var _colors2 = (0, _babelRuntimeHelpersInteropRequireDefault['default'])(_colors);
 
-  var _async2 = _interopRequireDefault(_async);
+  var _he2 = (0, _babelRuntimeHelpersInteropRequireDefault['default'])(_he);
 
-  var _colors2 = _interopRequireDefault(_colors);
+  var _addressDigger = (0, _babelRuntimeHelpersInteropRequireDefault['default'])(_htmlTaiwanAddressDigger);
 
-  var _he2 = _interopRequireDefault(_he);
+  var _imgDigger = (0, _babelRuntimeHelpersInteropRequireDefault['default'])(_htmlImgDigger);
 
-  var _addressDigger = _interopRequireDefault(_htmlTaiwanAddressDigger);
-
-  var _imgDigger = _interopRequireDefault(_htmlImgDigger);
-
-  var _isISOString = _interopRequireDefault(_isostring);
+  var _isISOString = (0, _babelRuntimeHelpersInteropRequireDefault['default'])(_isostring);
 
   var ENV = process.env.NODE_ENV || process.env.ENV || 'development';
 
@@ -52,14 +48,14 @@
 
     var FETCH_ALL, URL, log, maxPageNum, HTMLStringOfLists, list, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, HTMLString, items;
 
-    return regeneratorRuntime.async(function findAll$(context$1$0) {
+    return _babelRuntimeRegenerator['default'].async(function findAll$(context$1$0) {
       while (1) switch (context$1$0.prev = context$1$0.next) {
         case 0:
           FETCH_ALL = opts.fetchAll === true ? true : false;
           URL = _2['default'].isString(opts.url) ? opts.url : null;
           log = (0, _debug2['default'])(logRoot.namespace + ':findAll');
 
-          if (!URL) Promise.reject('Expect findAll({url :string}), but connot find url.');
+          if (!URL) _babelRuntimeCoreJsPromise['default'].reject('Expect findAll({url :string}), but connot find url.');
           log('findAll from URL ' + URL);
 
           maxPageNum = 1;
@@ -70,7 +66,7 @@
           }
 
           context$1$0.next = 9;
-          return regeneratorRuntime.awrap(_request['default'].get(URL));
+          return _babelRuntimeRegenerator['default'].awrap(_request['default'].get(URL));
 
         case 9:
           context$1$0.t0 = context$1$0.sent;
@@ -91,7 +87,7 @@
 
         case 17:
           context$1$0.next = 19;
-          return regeneratorRuntime.awrap(getAllPages(URL, 1, maxPageNum));
+          return _babelRuntimeRegenerator['default'].awrap(getAllPages(URL, 1, maxPageNum));
 
         case 19:
           HTMLStringOfLists = context$1$0.sent;
@@ -100,7 +96,7 @@
           _didIteratorError = false;
           _iteratorError = undefined;
           context$1$0.prev = 24;
-          _iterator = HTMLStringOfLists[Symbol.iterator]();
+          _iterator = (0, _babelRuntimeCoreJsGetIterator['default'])(HTMLStringOfLists);
 
         case 26:
           if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
@@ -110,7 +106,7 @@
 
           HTMLString = _step.value;
           context$1$0.next = 30;
-          return regeneratorRuntime.awrap(findArticleList(HTMLString));
+          return _babelRuntimeRegenerator['default'].awrap(findArticleList(HTMLString));
 
         case 30:
           items = context$1$0.sent;
@@ -179,7 +175,7 @@
 
     var URL, log, HTMLString, $body, body, title, published, cover, digQ, imgQ, _ref, _ref2, address, images;
 
-    return regeneratorRuntime.async(function find$(context$1$0) {
+    return _babelRuntimeRegenerator['default'].async(function find$(context$1$0) {
       while (1) switch (context$1$0.prev = context$1$0.next) {
         case 0:
           URL = opts.url ? opts.url : null;
@@ -197,7 +193,7 @@
           log('HTTP GET ' + URL);
 
           context$1$0.next = 7;
-          return regeneratorRuntime.awrap((0, _request['default'])({
+          return _babelRuntimeRegenerator['default'].awrap((0, _request['default'])({
             method: 'GET',
             url: URL,
             json: false
@@ -231,11 +227,11 @@
           digQ = _addressDigger['default'].dig(body);
           imgQ = _imgDigger['default'].dig(body);
           context$1$0.next = 27;
-          return regeneratorRuntime.awrap(Promise.all([digQ, imgQ]));
+          return _babelRuntimeRegenerator['default'].awrap(_babelRuntimeCoreJsPromise['default'].all([digQ, imgQ]));
 
         case 27:
           _ref = context$1$0.sent;
-          _ref2 = _slicedToArray(_ref, 2);
+          _ref2 = (0, _babelRuntimeHelpersSlicedToArray['default'])(_ref, 2);
           address = _ref2[0];
           images = _ref2[1];
 
@@ -275,7 +271,7 @@
     var log = (0, _debug2['default'])(logRoot.namespace + ':_getAllPages');
     var ranges = _2['default'].range(start, maxPageNum + 1);
 
-    return new Promise(function (ok, bad) {
+    return new _babelRuntimeCoreJsPromise['default'](function (ok, bad) {
 
       var data = [];
 
@@ -290,7 +286,7 @@
 
         promise.then(function (htmlString) {
           data.push(htmlString);
-          return new Promise(function (timeout) {
+          return new _babelRuntimeCoreJsPromise['default'](function (timeout) {
             setTimeout(timeout, 200);
           });
         }).then(done);
@@ -324,7 +320,7 @@
     });
 
     pageNums = _2['default'].reject(pageNums, function (val) {
-      return Number.isNaN(val);
+      return (0, _babelRuntimeCoreJsNumberIsNan['default'])(val);
     });
 
     var maxPageNum = _2['default'].max(pageNums);
@@ -373,7 +369,7 @@
     if (message === undefined) message = '';
 
     if (_2['default'].isFunction(log)) log('[error] ' + _colors2['default'].red.underline(message));
-    return Promise.reject(message);
+    return _babelRuntimeCoreJsPromise['default'].reject(message);
   }
 
   /**
