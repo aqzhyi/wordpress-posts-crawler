@@ -11,30 +11,36 @@ describe('find()', function () {
 
   it('Basic usage', async () => {
 
-    let article = await crawler.find({ url: 'http://yukiblog.tw/read-3802.html' })
+    let articles = []
 
-    let $body = $('<div>').append(article.body)
+    articles.push( await crawler.find({ url: 'http://yukiblog.tw/read-3802.html' }) )
+    articles.push( await crawler.find({ url: 'http://leosheng.tw/full-house-coffee/' }) )
 
-    expect(article).to.be.an('object')
+    for (let article of articles) {
 
-    expect(article).to.include.keys('url', 'title', 'published', 'address', 'cover', 'body', 'images')
+      let $body = $('<div>').append(article.body)
 
-    expect($body.find('style, script')).to.not.have.length.above(0, '不該有script,style,etc.')
+      expect(article).to.be.an('object')
 
-    expect(article.body).to.be.a('string')
+      expect(article).to.include.keys('url', 'title', 'published', 'address', 'cover', 'body', 'images')
 
-    expect(article.title).to.be.a('string')
+      expect($body.find('style, script')).to.not.have.length.above(0, '不該有script,style,etc.')
 
-    expect(isUrl(article.url)).to.equal(true, 'article.url 必須是 URL')
+      expect(article.body).to.be.a('string')
 
-    expect(isUrl(article.cover)).to.equal(true, 'article.cover 必須是 URL')
+      expect(article.title).to.be.a('string')
 
-    expect(isISOString(article.published)).to.equal(true, 'article.published 必須為 ISO8601')
+      expect(isUrl(article.url)).to.equal(true, 'article.url 必須是 URL')
 
-    expect(article.address).to.be.an('array')
-    _.each(article.address, (item) => expect(item).to.be.a('string', 'article.address 必須是 string[]'))
+      expect(isUrl(article.cover)).to.equal(true, 'article.cover 必須是 URL')
 
-    expect(article.images).to.be.an('array')
-    _.each(article.images, (item) => expect(isUrl(item)).to.equal(true, 'article.images 必須是 string[]'))
+      expect(isISOString(article.published)).to.equal(true, 'article.published 必須為 ISO8601')
+
+      expect(article.address).to.be.an('array')
+      for (let addr of article.address) expect(addr).to.be.a('string', 'article.address 必須是 string[]')
+
+      expect(article.images).to.be.an('array')
+      for (let img of article.images) expect(isUrl(img)).to.equal(true, 'article.images 必須是 string[]')
+    }
   })
 })
